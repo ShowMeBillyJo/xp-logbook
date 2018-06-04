@@ -13,6 +13,7 @@
     mapped.getNames = function () { return this.map(function (obj) { return obj.name; }); }
     return mapped;
   }
+
 //  return {
 //  };
 //})();

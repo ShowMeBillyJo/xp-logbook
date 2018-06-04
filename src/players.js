@@ -39,6 +39,7 @@
     }
     return xpToDate > 0 ? xpToDate : "";
   }
+
 //  return {
 //  };
 //})();
