@@ -1,0 +1,8 @@
+{
+  "sheets": {
+    "macros": [{
+      "menuName": "Create New Session Sheets",
+      "functionName": "createNewSessionSheets"
+    }]
+  }
+}
