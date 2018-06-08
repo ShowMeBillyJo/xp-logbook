@@ -1,1 +1,1 @@
-import './node_modules/@types/google-apps-script'
+import './node_modules/@types/google-apps-script';

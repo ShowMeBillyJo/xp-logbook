@@ -1,8 +1,19 @@
 {
+  "timeZone": "America/Chicago",
+  "dependencies": {
+  },
   "sheets": {
     "macros": [{
       "menuName": "Create New Session Sheets",
       "functionName": "createNewSessionSheets"
+    },
+    {
+      "menuName": "Calculate New Session XP To-date",
+      "functionName": "calculateNewSessionXpToDate"
+    },
+    {
+      "menuName": "Recalculate All XP To-date",
+      "functionName": "recalculateAllXpToDate"
     }]
   }
 }

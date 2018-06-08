@@ -1,19 +1,28 @@
-//(function () {
-  function getSheetName() {
-    return SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getName();
-  }
+var Sheet = (function () {
+    function _getSheetName() {
+        return SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getName();
+    }
 
-  function getRangeValues(reference, mapCallback) {
-    var values = SpreadsheetApp.getActiveSpreadsheet().getRange(reference).getValues()
-      .filter(function (row) { return row[0] != ''; });
-    if (mapCallback == null || typeof mapCallback != 'function') return values;
+    function getRangeValues(reference, mapCallback) {
+        return _getValues(SpreadsheetApp.getActiveSpreadsheet().getRange(reference).getValues(), mapCallback);
+    }
 
-    var mapped = values.map(mapCallback);
-    mapped.getByName = function (name) { return this.filter(function (obj) { return obj.name == name; })[0]; };
-    mapped.getNames = function () { return this.map(function (obj) { return obj.name; }); }
-    return mapped;
-  }
+    function getRangeDisplayValues(reference, mapCallback) {
+        return _getValues(SpreadsheetApp.getActiveSpreadsheet().getRange(reference).getDisplayValues(), mapCallback);
+    }
 
-//  return {
-//  };
-//})();
+    function _getValues(rawValues, mapCallback) {
+        var values = rawValues.filter(function (row) { return row[0] != ''; });
+        if (mapCallback == null || typeof mapCallback != 'function') return values;
+
+        var mapped = values.map(mapCallback);
+        mapped.getByName = function (name) { return this.filter(function (obj) { return obj.name == name; })[0]; };
+        mapped.getNames = function () { return this.map(function (obj) { return obj.name; }); }
+        return mapped;
+    }
+
+    return {
+        getRangeValues: getRangeValues,
+        getRangeDisplayValues: getRangeDisplayValues
+    };
+})();
