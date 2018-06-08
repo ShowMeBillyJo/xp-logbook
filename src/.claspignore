@@ -1,0 +1,5 @@
+node_modules/**/.*
+node_modules/**/.*/**
+
+_imports.js
+package-lock.json
