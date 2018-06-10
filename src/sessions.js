@@ -13,6 +13,17 @@ var Sessions = (function () {
             });
     }
 
+    function _getSessionsWithXpSummaries() {
+        var sessions = _getSessions();
+        if (sessions.length == 0) return [];
+
+        for (var i = 0; i < sessions.length; i++) {
+            var session = sessions[i];
+            session.xpSummary = _getSessionXpSummary(session.name);
+        }
+        return sessions;
+    }
+
     function _getSessionXpLogStartRow(sessionName) {
         var values = SpreadsheetApp.getActiveSpreadsheet().getRange(sessionName + '!B1:G').getValues();
         var startRow = -1;
@@ -60,13 +71,13 @@ var Sessions = (function () {
     }
 
     function calculateNewSessionXpToDate() {
-        var sessions = _getSessions();
+        var sessions = _getSessionsWithXpSummaries();
         if (sessions.length == 0) return;
 
         var sessionIndex = -1;
         for (var i = 0; i < sessions.length; i++) {
-            var xpSummary = _getSessionXpSummary(sessions[i].name);
-            if (xpSummary == null) {
+            var xpSummary = sessions[i].xpSummary;
+            if (!!xpSummary && xpSummary.length > 0 && !xpSummary[0].xpToDate) {
                 sessionIndex = i;
                 break;
             }
@@ -75,45 +86,72 @@ var Sessions = (function () {
     }
 
     function recalculateAllXpToDate() {
-        var sessions = _getSessions();
+        var sessions = _getSessionsWithXpSummaries();
         if (sessions.length == 0) return;
 
         _calculateXpToDateStartingAtSession(sessions, 0);
     }
 
     function _calculateXpToDateStartingAtSession(sessions, sessionIndex) {
+        var players = _getPlayersForXpCalculations(sessions, sessionIndex);
         var ss = SpreadsheetApp.getActiveSpreadsheet();
-        var players = Players.getPlayers().map(function (player) {
-            return {
-                name: player.name,
-                totalXp: 0
-            };
-        });
-
         for (var i = sessionIndex; i < sessions.length; i++) {
-            var session = sessions[i];
-            var s = ss.getSheetByName(session.name);
-            if (s == null) continue;
-
-            var xpSummary = _getSessionXpSummary(session.name);
-            if (xpSummary == null) continue;
-
-            var xpStartRow = _getSessionXpLogStartRow(session.name);
-            s.getRange('G' + xpStartRow + ':G').clearContent();
-
-            for (var j = 0; j < players.length; j++) {
-                var player = players[j];
-                var playerXp = xpSummary.getPlayer(player.name);
-                if (playerXp == null) continue;
-                player.totalXp += playerXp.sessionXp;
-                s.getRange('G' + playerXp._rowNum).setValue(player.totalXp);
-            }
+            _calculateXpToDateForSession(sessions[i], players, ss);
         }
 
         var s = ss.getSheetByName('Summary');
         for (var j = 0; j < players.length; j++) {
             var player = players[j];
             s.getRange('D' + player._rowNum).setValue(player.totalXp);
+        }
+    }
+
+    function _getPlayersForXpCalculations(sessions, sessionIndex) {
+        var startingXpSummary = null;
+        if (sessionIndex > 0) startingXpSummary = _getStartingXpSummaryForCalculations(sessions, sessionIndex);
+        return Players.getPlayers().map(function (player) {
+            var xpToDate = 0;
+            if (!!startingXpSummary) {
+                var playerXp = startingXpSummary.getPlayer(player.name);
+                if (!!playerXp) xpToDate = playerXp.xpToDate;
+            }
+            return {
+                _rowNum: player._rowNum,
+                name: player.name,
+                totalXp: xpToDate
+            };
+        });
+    }
+
+    function _getStartingXpSummaryForCalculations(sessions, sessionIndex) {
+        var startingXpSummary = null;
+        for (var i = sessionIndex - 1; i >= 0; i--) {
+            var prevSession = sessions[i];
+            var xpSummary = prevSession.xpSummary;
+            if (!!xpSummary) {
+                startingXpSummary = xpSummary;
+                break;
+            }
+        }
+        return startingXpSummary;
+    }
+
+    function _calculateXpToDateForSession(session, players, ss) {
+        var s = ss.getSheetByName(session.name);
+        if (s == null) return;
+
+        var xpSummary = session.xpSummary;
+        if (!xpSummary || xpSummary.length == 0) return;
+
+        var xpStartRow = _getSessionXpLogStartRow(session.name);
+        s.getRange('G' + xpStartRow + ':G').clearContent();
+
+        for (var j = 0; j < players.length; j++) {
+            var player = players[j];
+            var playerXp = xpSummary.getPlayer(player.name);
+            if (!playerXp) continue;
+            player.totalXp += playerXp.sessionXp;
+            s.getRange('G' + playerXp._rowNum).setValue(player.totalXp);
         }
     }
 
