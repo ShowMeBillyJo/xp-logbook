@@ -1,5 +1,5 @@
 var Players = (function () {
-    function _getPlayers() {
+    function getPlayers() {
         var startRow = SpreadsheetApp.getActiveSpreadsheet().getRange('Summary!Players').getRow();
         return Sheet.getRangeValues('Summary!Players',
             function (row, index) {
@@ -13,5 +13,6 @@ var Players = (function () {
     }
 
     return {
+        getPlayers: getPlayers
     };
 })();
