@@ -13,7 +13,7 @@ var Sheet = (function () {
 
     function _getValues(rawValues, mapCallback) {
         var values = rawValues.filter(function (row) { return row[0] != ''; });
-        if (mapCallback == null || typeof mapCallback != 'function') return values;
+        if (!mapCallback || typeof mapCallback != 'function') return values;
 
         var mapped = values.map(mapCallback);
         mapped.getByName = function (name) { return this.filter(function (obj) { return obj.name == name; })[0]; };
