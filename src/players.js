@@ -1,7 +1,8 @@
 var Players = (function () {
     function getPlayers() {
-        var startRow = SpreadsheetApp.getActiveSpreadsheet().getRange('Summary!Players').getRow();
-        return Sheet.getRangeValues('Summary!Players',
+        var s = Sheet.getSheet('Summary');
+        var startRow = Sheet.getRange(s, 'Players').getRow();
+        return Sheet.getRangeValues(s, 'Players',
             function (row, index) {
                 return {
                     _rowNum: startRow + index,

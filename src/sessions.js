@@ -1,7 +1,8 @@
 var Sessions = (function () {
     function _getSessions() {
-        var startRow = SpreadsheetApp.getActiveSpreadsheet().getRange('Summary!Sessions').getRow();
-        return Sheet.getRangeDisplayValues('Summary!Sessions',
+        var s = Sheet.getSheet('Summary');
+        var startRow = Sheet.getRange(s, 'Sessions').getRow();
+        return Sheet.getRangeDisplayValues(s, 'Sessions',
             function (row, index) {
                 return {
                     _rowNum: startRow + index,
@@ -25,7 +26,7 @@ var Sessions = (function () {
     }
 
     function _getSessionXpLogStartRow(sessionName) {
-        var values = SpreadsheetApp.getActiveSpreadsheet().getRange(sessionName + '!B1:G').getValues();
+        var values = Sheet.getRangeValues(Sheet.getSheet(sessionName), 'B1:G');
         var startRow = -1;
         for (var i = 2; i < values.length; i++) {
             if (values[i - 2][0] == 'XP Logs' && values[i - 1][0] == 'Player') {
@@ -40,16 +41,18 @@ var Sessions = (function () {
         var startRow = _getSessionXpLogStartRow(sessionName);
         if (startRow == -1) return [];
 
-        var logs = Sheet.getRangeValues(sessionName + '!B' + startRow + ':G').map(function (value, index) {
-            return {
-                _rowNum: startRow + index,
-                playerName: value[0],
-                source: value[1],
-                earned: value[3],
-                sessionXp: value[4],
-                xpToDate: value[5]
-            };
-        });
+        var logs = Sheet
+            .getRangeValues(Sheet.getSheet(sessionName), 'B' + startRow + ':G')
+            .map(function (value, index) {
+                return {
+                    _rowNum: startRow + index,
+                    playerName: value[0],
+                    source: value[1],
+                    earned: value[3],
+                    sessionXp: value[4],
+                    xpToDate: value[5]
+                };
+            });
         logs.filterByPlayer = function (playerName) { return this.filter(function (log) { return log.playerName == playerName; }); };
         return logs;
     }
@@ -94,15 +97,14 @@ var Sessions = (function () {
 
     function _calculateXpToDateStartingAtSession(sessions, sessionIndex) {
         var players = _getPlayersForXpCalculations(sessions, sessionIndex);
-        var ss = SpreadsheetApp.getActiveSpreadsheet();
         for (var i = sessionIndex; i < sessions.length; i++) {
-            _calculateXpToDateForSession(sessions[i], players, ss);
+            _calculateXpToDateForSession(sessions[i], players);
         }
 
-        var s = ss.getSheetByName('Summary');
+        var s = Sheet.getSheet('Summary');
         for (var j = 0; j < players.length; j++) {
             var player = players[j];
-            s.getRange('D' + player._rowNum).setValue(player.totalXp);
+            Sheet.getRange(s, 'D' + player._rowNum).setValue(player.totalXp);
         }
     }
 
@@ -136,43 +138,40 @@ var Sessions = (function () {
         return startingXpSummary;
     }
 
-    function _calculateXpToDateForSession(session, players, ss) {
-        var s = ss.getSheetByName(session.name);
+    function _calculateXpToDateForSession(session, players) {
+        var s = Sheet.getSheet(session.name);
         if (s == null) return;
 
         var xpSummary = session.xpSummary;
         if (!xpSummary || xpSummary.length == 0) return;
 
         var xpStartRow = _getSessionXpLogStartRow(session.name);
-        s.getRange('G' + xpStartRow + ':G').clearContent();
+        Sheet.getRange(s, 'G' + xpStartRow + ':G').clearContent();
 
         for (var j = 0; j < players.length; j++) {
             var player = players[j];
             var playerXp = xpSummary.getPlayer(player.name);
             if (!playerXp) continue;
             player.totalXp += playerXp.sessionXp;
-            s.getRange('G' + playerXp._rowNum).setValue(player.totalXp);
+            Sheet.getRange(s, 'G' + playerXp._rowNum).setValue(player.totalXp);
         }
     }
 
     function createNewSessionSheets() {
-        var ss = SpreadsheetApp.getActiveSpreadsheet();
-        var templateSheet = ss.getSheetByName('Session Template');
-
+        var templateSheet = Sheet.getSheet('Session Template');
         var sessions = _getSessions();
         sessions.forEach(function (session) {
-            var s = ss.getSheetByName(session.name);
+            var s = Sheet.getSheet(session.name);
             if (s != null) return;
 
-            var newS = ss.insertSheet(session.name, 1, { template: templateSheet });
+            var newS = Sheet.ss.insertSheet(session.name, 1, { template: templateSheet });
             var sessionMeta = _formatSessionMeta(session);
-            newS.getRange('B3').setValue(sessionMeta);
+            Sheet.getRange(newS, 'B3').setValue(sessionMeta);
         });
     }
 
     function _formatSessionMeta(session) {
-        var db = Db.getDb();
-        var sessionMetaFormat = db.getValue('Format', 'SessionMeta');
+        var sessionMetaFormat = Db.getDb().getValue('Format', 'SessionMeta');
         return sessionMetaFormat
             .replace('{{NAME}}', session.name)
             .replace('{{TITLE}}', session.title)

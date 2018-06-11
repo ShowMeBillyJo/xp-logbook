@@ -1,17 +1,30 @@
 var Sheet = (function () {
-    function _getSheetName() {
-        return SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getName();
+    var _ss = SpreadsheetApp.getActiveSpreadsheet();
+    var _s = _ss.getActiveSheet();
+
+    function getSheet(sheetName) {
+        return _ss.getSheetByName(sheetName);
     }
 
-    function getRangeValues(reference, mapCallback) {
-        return _getValues(SpreadsheetApp.getActiveSpreadsheet().getRange(reference).getValues(), mapCallback);
+    function getRange(sheet, a1Reference) {
+        if (!sheet) return null;
+        return sheet.getRange(a1Reference);
     }
 
-    function getRangeDisplayValues(reference, mapCallback) {
-        return _getValues(SpreadsheetApp.getActiveSpreadsheet().getRange(reference).getDisplayValues(), mapCallback);
+    function getRangeValues(sheet, a1Reference, mapCallback) {
+        var range = getRange(sheet, a1Reference);
+        if (!range) return [];
+        return _filterAndMapValues(range.getValues(), mapCallback);
     }
 
-    function _getValues(rawValues, mapCallback) {
+    function getRangeDisplayValues(sheet, a1Reference, mapCallback) {
+        var range = getRange(sheet, a1Reference);
+        if (!range) return [];
+        return _filterAndMapValues(range.getDisplayValues(), mapCallback);
+    }
+
+    function _filterAndMapValues(rawValues, mapCallback) {
+        if (!rawValues) return [];
         var values = rawValues.filter(function (row) { return row[0] != ''; });
         if (!mapCallback || typeof mapCallback != 'function') return values;
 
@@ -22,6 +35,10 @@ var Sheet = (function () {
     }
 
     return {
+        ss: _ss,
+        s: _s,
+        getSheet: getSheet,
+        getRange: getRange,
         getRangeValues: getRangeValues,
         getRangeDisplayValues: getRangeDisplayValues
     };

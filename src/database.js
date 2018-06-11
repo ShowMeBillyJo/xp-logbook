@@ -1,6 +1,6 @@
 var Db = (function () {
     function getDb() {
-        var values = Sheet.getRangeValues('Reference!ScriptDb');
+        var values = Sheet.getRangeValues(Sheet.getSheet('Reference'), 'ScriptDb');
         var rows = values.map(function (row) {
             return {
                 scope: row[0],
