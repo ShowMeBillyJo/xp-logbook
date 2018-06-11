@@ -164,7 +164,7 @@ var Sessions = (function () {
             var s = ss.getSheetByName(session.name);
             if (s != null) return;
 
-            ss.insertSheet(session.name, 2, { template: templateSheet });
+            var newS = ss.insertSheet(session.name, 1, { template: templateSheet });
             var sessionMeta = _formatSessionMeta(session);
             newS.getRange('B3').setValue(sessionMeta);
         });
