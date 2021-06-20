@@ -1,6 +1,6 @@
 # XP Logbook
 
-A Google Sheets implementation of an experience point logbook, suitable for tracking tabletop roleplaying games and other systems of multi-part progression.
+A Google Sheets implementation of an experience point logbook, suitable for tracking advancement in roleplaying games and other systems of episodic progression.
 
 ## To-Do
 
